@@ -3,15 +3,11 @@
    This code solves day 13 of 2018 Advent of Code:
 
    --- Day 13: Mine Cart Madness ---
-   A crop of this size requires significant logistics to transport produce,
-   soil, fertilizer, and so on. The Elves are very busy pushing things around
-   in carts on some kind of rudimentary system of tracks they've come up with.
 
-   Seeing as how cart-and-track systems don't appear in recorded history for
-   another 1000 years, the Elves seem to be making this up as they go along.
-   They haven't even figured out how to avoid collisions yet.
-
-   You map out the tracks (your puzzle input) and see where you can help.
+   Advent of Code puts up puzzles each day Dec 1-25.  Day 13's input data
+   models a set of tracks that criss-cross and carts on the tracks.  The
+   carts move with the following rules.  The goal is to identify the
+   first time two carts collide.
 
    Tracks consist of straight paths (| and -), curves (/ and \), and
    intersections (+). Curves connect exactly two perpendicular pieces of
@@ -21,6 +17,7 @@
    |    |
    |    |
    \----/
+
    Intersections occur when two perpendicular paths cross. At an intersection,
    a cart is capable of turning left, turning right, or continuing straight.
    Here are two loops connected by two intersections:
@@ -32,6 +29,7 @@
    \--+--/  |
       |     |
       \-----/
+
    Several carts are also on the tracks. Carts always face either up (^),
    down (v), left (<), or right (>). (On your initial map, the track under
    each cart is a straight path matching the direction the cart is facing.)
@@ -59,6 +57,7 @@
    |  |  ^  ^  |
    ^  ^  |  |  |
    |  |  |  |  |
+
    First, the top cart moves. It is facing down (v), so it moves down one
    square. Second, the bottom cart moves. It is facing up (^), so it moves
    up one square. Because all carts have moved, the first tick ends. Then,
@@ -173,6 +172,7 @@
    | | |  X |  |
    \-+-/  \-+--/
      \------/
+
    After following their respective paths for a while, the carts eventually
    crash. To help prevent crashes, you'd like to know the location of the
    first crash. Locations are given in X,Y coordinates, where the furthest
@@ -186,8 +186,8 @@
    3| | |  X |  |
    4\-+-/  \-+--/
    5  \------/
-   In this example, the location of the first crash is 7,3.
 
+   In this example, the location of the first crash is 7,3.
 */
 
 const fs = require('fs');
@@ -206,7 +206,7 @@ const RIGHT = 6;
 // globals
 let gCrash = false; // was there a crash
 let gCrashRowCol = { row: -1, col: -1 }; // location of crash
-let gError = false; // was there an error
+let gError = false; // was there an error / unexpected condition
 
 // const FILENAME = 'dataTest.txt'
 const FILENAME = 'data.txt'
@@ -236,6 +236,9 @@ class Cart {
 
   /* ********************************* */
   intersection() {
+    // Each time a cart has the option to turn (by arriving at any intersection),
+    // it turns left the first time, goes straight the second time, turns right the
+    // third time
     switch (this.nextTurn) {
       case LEFT: this.turnLeft(); break;
       case RIGHT: this.turnRight(); break;
@@ -270,7 +273,7 @@ class Cart {
   }
 
   /* ********************************* */
-  // Move forward based on orientation
+  // Move forward based on current orientation
   move() {
     switch (this.dir) {
       case NORTH: this.rowCol.row--; break;
@@ -315,13 +318,13 @@ function getInitialState(origBoardStrings) {
     const rowWithCarts = origBoardStrings[row].split('');
     for (let col = 0; col < rowWithCarts.length; col++) {
 
-      // is this a cart?
+      // is this a cart?  Carts have a direction: ^>v<
       const c = rowWithCarts[col];
       if ('^>v<'.includes(c)) {
-        carts.push(new Cart({row, col}, '^>v<'.indexOf(c)));
+        carts.push(new Cart({ row, col }, '^>v<'.indexOf(c)));  // indexOf matches enumeration of cardinal directions
         tracks[row][col] = (c === '^' || c === 'v') ? '|' : '-';
 
-      // not a cart, part of the track layout
+      // not a cart, this is part of the track layout
       } else {
         tracks[row][col] = c;
       }
@@ -331,7 +334,9 @@ function getInitialState(origBoardStrings) {
 }
 
 /* ********************************* */
-// Sort the array of carts.
+// Sort the array of carts to satisfy rule:
+//   Carts on the top row move first (acting from left to right),
+//   then carts on the second row move again from left to right), and so on.
 // Detect a crash if two carts are in the same location.
 function compareCarts(cart1, cart2) {
   if (cart1.rowCol.row < cart2.rowCol.row)
@@ -377,7 +382,7 @@ function tick(state) {
       case '/': cart.forwardSlash(); break;
       case '`': cart.backSlash(); break;
       default:
-        console.log("ERROR2: unk track char for cart", cart);
+        console.log("ERROR2: unknown track char for cart", cart);
         gError = true;
     }
   }
@@ -411,8 +416,8 @@ function logState(state) {
     console.log(cart);
   }
 }
-/* ********************************* */
-/* ********************************* */
+/* ************************************************ */
+/* ************************************************ */
 /* Run the carts on the tracks until there is a crash
    and report the time and location of the crash.
 */
