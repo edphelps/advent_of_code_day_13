@@ -2,7 +2,9 @@
 
 ## About the application
 
-This code solves day 13 of 2018 Advent of Code:
+<pre>
+
+This code solves day 13 of the 2018 Advent of Code:
 
 --- Day 13: Mine Cart Madness ---
 A crop of this size requires significant logistics to transport produce,
@@ -189,3 +191,5 @@ left column is X=0 and the furthest top row is Y=0:
 4\-+-/  \-+--/
 5  \------/
 In this example, the location of the first crash is 7,3.
+
+</pre>
